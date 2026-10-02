@@ -29,7 +29,8 @@ depuis son propre Claude (claude.ai), sur son abonnement.
 - **Claude** (`src/lib/veille.ts`) : une recherche web (`web_search`) puis une mise en forme
   en signaux structurés validés par un schéma Zod. Modèle `claude-opus-5-5`, avec repli
   automatique côté serveur si un filtre de sécurité refuse une requête.
-- **Tâche hebdomadaire** : `vercel.json` appelle `/api/cron/hebdo` chaque lundi à 6 h (UTC).
+- **Tâche hebdomadaire** : `vercel.json` appelle `/api/cron/hebdo` chaque lundi à 6 h (UTC),
+  qui lance chaque veille dans sa propre exécution (`/api/cron/veille/[id]`).
 
 ## Installation
 
@@ -45,6 +46,6 @@ renseigne les mêmes variables d'environnement.
 
 ## Limites connues (v1)
 
-- La tâche hebdomadaire traite les veilles une par une : au-delà de quelques dizaines
-  de veilles, il faudra une file d'attente.
+- Chaque veille dispose de 5 minutes (limite du plan gratuit de Vercel) ; au-delà de
+  quelques dizaines de veilles, il faudra une file d'attente.
 - « Lancer maintenant » attend la fin de la recherche (quelques minutes).
