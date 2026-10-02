@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { chiffrer } from "@/lib/chiffrement";
+import { empreinte, nouveauJeton } from "@/lib/jeton";
 import { supabaseAdmin, supabaseServeur, utilisateurCourant } from "@/lib/supabase/server";
 import { verifierCle } from "@/lib/veille";
 
@@ -101,4 +102,23 @@ export async function changerStatut(formData: FormData) {
   const id = String(formData.get("id"));
   await supabase.from("signaux").update({ statut: String(formData.get("statut")) }).eq("id", id);
   revalidatePath(`/app/signaux/${id}`);
+}
+
+export async function genererJeton(): Promise<{ adresse?: string; erreur?: string }> {
+  const { user } = await utilisateurCourant();
+  if (!user) return { erreur: "Non connecté." };
+  const jeton = nouveauJeton();
+  const { error } = await supabaseAdmin()
+    .from("jetons_connecteur")
+    .upsert({ user_id: user.id, empreinte: empreinte(jeton), created_at: new Date().toISOString(), dernier_usage: null });
+  if (error) return { erreur: error.message };
+  revalidatePath("/app/reglages");
+  return { adresse: `${process.env.NEXT_PUBLIC_SITE_URL}/api/mcp/${jeton}` };
+}
+
+export async function supprimerJeton() {
+  const { user } = await utilisateurCourant();
+  if (!user) redirect("/login");
+  await supabaseAdmin().from("jetons_connecteur").delete().eq("user_id", user.id);
+  revalidatePath("/app/reglages");
 }

@@ -18,8 +18,16 @@ colle sa clé Anthropic (console.anthropic.com) dans ses réglages et ses veille
 facturées sur son propre compte. La clé est vérifiée, chiffrée (AES-256-GCM) et stockée
 dans une table que seul le serveur peut lire.
 
-Prochaine étape prévue : un connecteur MCP pour que chacun puisse aussi piloter Radar
-depuis son propre Claude (claude.ai), sur son abonnement.
+Radar propose aussi un **connecteur Claude** (serveur MCP) : chacun active le connecteur
+dans ses réglages Radar, obtient une adresse personnelle, et l'ajoute dans claude.ai
+(Réglages > Connecteurs > Ajouter un connecteur personnalisé). C'est alors son propre
+Claude, sur son abonnement, qui fait la recherche web et range les signaux dans Radar
+(« fais ma veille Radar de la semaine », ou le prompt `veille_hebdo`). Aucune clé API
+n'est nécessaire dans ce mode.
+
+Outils exposés : `lister_veilles`, `lire_profil`, `creer_veille`, `lire_signaux`,
+`enregistrer_signaux`, `changer_statut`. L'adresse contient un jeton secret dont seule
+l'empreinte SHA-256 est stockée.
 
 ## Architecture
 
@@ -29,13 +37,14 @@ depuis son propre Claude (claude.ai), sur son abonnement.
 - **Claude** (`src/lib/veille.ts`) : une recherche web (`web_search`) puis une mise en forme
   en signaux structurés validés par un schéma Zod. Modèle `claude-opus-5-5`, avec repli
   automatique côté serveur si un filtre de sécurité refuse une requête.
+- **Connecteur Claude** (`src/lib/mcp.ts`, `/api/mcp/[jeton]`) : serveur MCP via `mcp-handler`.
 - **Tâche hebdomadaire** : `vercel.json` appelle `/api/cron/hebdo` chaque lundi à 6 h (UTC),
   qui lance chaque veille dans sa propre exécution (`/api/cron/veille/[id]`).
 
 ## Installation
 
-1. Crée un projet sur [supabase.com](https://supabase.com), puis exécute
-   `supabase/migrations/0001_init.sql` dans l'éditeur SQL.
+1. Crée un projet sur [supabase.com](https://supabase.com), puis exécute dans l'éditeur SQL
+   les fichiers de `supabase/migrations/`, dans l'ordre (`0001_init.sql`, puis `0002_connecteur.sql`).
 2. Dans Supabase > Authentication > URL Configuration, ajoute
    `https://ton-domaine/auth/callback` aux URL de redirection.
 3. Copie `.env.example` en `.env.local` et remplis les valeurs.
