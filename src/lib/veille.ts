@@ -8,7 +8,7 @@ const MODELE = "claude-opus-5-5";
 // la requête sur un modèle de repli adapté (paramètre « fallbacks »).
 const REPLI = { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const };
 
-const SignalSchema = z.object({
+export const SignalSchema = z.object({
   titre: z.string(),
   categorie: z.enum(["entreprise", "societal", "innovation", "legislation"]),
   synthese: z.string(),

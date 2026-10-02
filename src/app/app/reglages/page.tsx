@@ -1,4 +1,6 @@
 import { enregistrerCle, enregistrerProfil, supprimerCle } from "@/app/actions";
+import { Connecteur } from "@/components/Connecteur";
+import { supabaseAdmin } from "@/lib/supabase/server";
 import { utilisateurCourant } from "@/lib/supabase/server";
 import type { Profil } from "@/lib/types";
 
@@ -12,6 +14,11 @@ export default async function Reglages({ searchParams }: { searchParams: Promise
   const { supabase, user } = await utilisateurCourant();
   const { data } = await supabase.from("profils").select("*").maybeSingle();
   const p = data as Profil | null;
+  const { data: jeton } = await supabaseAdmin()
+    .from("jetons_connecteur")
+    .select("user_id")
+    .eq("user_id", user?.id ?? "")
+    .maybeSingle();
 
   return (
     <main className="narrow">
@@ -44,6 +51,14 @@ export default async function Reglages({ searchParams }: { searchParams: Promise
           <button className="cta">Vérifier et enregistrer</button>
         </div>
       </form>
+
+      <h2 className="rub">Connecteur Claude</h2>
+      <p className="sub">
+        Pour faire ta veille directement depuis ton Claude (sur ton abonnement, sans clé API) : active le
+        connecteur, puis dans claude.ai ouvre Réglages &gt; Connecteurs &gt; Ajouter un connecteur personnalisé, et
+        colle ton adresse. Ensuite, demande simplement à Claude « fais ma veille Radar de la semaine ».
+      </p>
+      <Connecteur actif={!!jeton} />
 
       <h2 className="rub">Ton profil</h2>
       <p className="sub">Claude s&apos;en sert pour choisir les signaux et les opportunités qui te concernent.</p>
